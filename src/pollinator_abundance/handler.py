@@ -1,7 +1,7 @@
 import csv
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from datetime import datetime
 from io import StringIO
 
@@ -160,7 +160,7 @@ def lambda_bee(
         plantations_polygons_id=0,
         override=True,
         how="lambda",
-):
+) -> [str | None, np.ndarray, np.ndarray]:
     print(f"Performing lambda_bee for bee {bee['SPECIES']}")
     lambda_payload = {
         "plantation_id": plantation_id,
@@ -355,6 +355,7 @@ def pollinator_abundance_calculation():
         dict_of_results["mask_ca"] = mask_ca
 
         if not compute_only_msa:
+            start = time.time()
             try:
                 ### CLC
                 kpi_elements_generation(
@@ -401,10 +402,10 @@ def pollinator_abundance_calculation():
                 raise e
 
             mex = "Created CLC images"
-            print(mex)
+            print(f"{mex} exec time: {time.time() - start} s")
 
             ### NECTAR POTENTIAL
-
+            start = time.time()
             try:
                 kpi_elements_generation(
                     roi_id=roi["id"],
@@ -450,10 +451,10 @@ def pollinator_abundance_calculation():
                 raise e
 
             mex = "Created PN images"
-            print(mex)
+            print(f"{mex} exec time: {time.time() - start} s")
 
-            ### FLOWER AVAILABILITY
-
+            ### FLOWER AVAILABILITY (FA)
+            start = time.time()
             try:
                 image_url_fa = kpi_elements_generation(
                     roi_id=roi["id"],
@@ -499,10 +500,10 @@ def pollinator_abundance_calculation():
                 raise e
 
             mex = "Created FA images"
-            print(mex)
+            print(f"{mex} exec time: {time.time() - start} s")
 
-        ### MSA (LU, all taxonomic groups)
-
+        ### Mean Species Abundance MSA (LU, all taxonomic groups)
+        start = time.time()
         try:
             kpi_elements_generation(
                 roi_id=roi["id"],
@@ -547,9 +548,10 @@ def pollinator_abundance_calculation():
         except Exception as e:
             raise e
         mex = "Created MSA images"
-        print(mex)
+        print(f"{mex} exec time: {time.time() - start} s")
 
         ### MSA_LU_animals
+        start = time.time()
         try:
             kpi_elements_generation(
                 roi_id=roi["id"],
@@ -594,10 +596,10 @@ def pollinator_abundance_calculation():
         except Exception as e:
             raise e
         mex = "Created MSA_LU Animals images"
-        print(mex)
+        print(f"{mex} exec time: {time.time() - start} s")
 
         ### MSA_LU_plants
-
+        start = time.time()
         try:
             kpi_elements_generation(
                 roi_id=roi["id"],
@@ -642,7 +644,7 @@ def pollinator_abundance_calculation():
         except Exception as e:
             raise e
         mex = "Created MSA_LU Plants images"
-        print(mex)
+        print(f"{mex} exec time: {time.time() - start} s")
 
         # According to parameter 'compute_pa_ns', compute or skip PA and NS
         if compute_pa_ns is True:
@@ -662,7 +664,8 @@ def pollinator_abundance_calculation():
 
             print("Running ThreadPool")
 
-            with ThreadPoolExecutor(max_workers=max_threads) as executor:
+            start = time.time()
+            with ProcessPoolExecutor(max_workers=max_threads) as executor:
                 futures = [
                     executor.submit(
                         lambda_bee,
@@ -704,7 +707,7 @@ def pollinator_abundance_calculation():
                         total_bee += 1
 
             mex = "Computed PA and NS data"
-            print(mex)
+            print(f"{mex} in {time.time() - start} s")
 
             pa_image_total = np.zeros_like(pa_image)
             ns_images_total = np.zeros_like(ns_image)
@@ -716,6 +719,7 @@ def pollinator_abundance_calculation():
             artificial_bee = False
             total_ns_pa_cycle = len(NS_COLUMNS)
             for idx, ns in enumerate(NS_COLUMNS):
+                start = time.time()
                 if total_ns_count[ns] != 0:
                     pa_image_total += pa_bees_image_ns[ns]
                     ns_images_total += ns_images[ns]
@@ -816,7 +820,7 @@ def pollinator_abundance_calculation():
 
                 i += 1
                 mex = f"Creating NS and PA: step {idx + 1}/{total_ns_pa_cycle}"
-                print(mex)
+                print(f"{mex} in {time.time() - start} s")
             print("Created images PA and NS")
 
             if not artificial_bee:

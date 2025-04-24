@@ -57,3 +57,7 @@ run: venv ## Run the main application script.
 clean: ## Remove the .venv directory.
 	@echo "Removing .venv directory..."
 	@rm -rf .venv
+
+test: venv ## Run the tests
+	@echo "Running tests"
+	@uv run python tests/handler_test.py
