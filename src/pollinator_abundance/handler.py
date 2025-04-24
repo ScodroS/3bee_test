@@ -1,7 +1,7 @@
 import csv
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from io import StringIO
 
@@ -145,22 +145,22 @@ def pa_single_bee_roi_ca(event, context):
 
 
 def lambda_bee(
-        plantation_id,
-        bee,
-        clc_values_roi,
-        clc_values_ca,
-        roi,
-        ca,
-        ratio_x,
-        ratio_y,
-        min_res,
-        image_url_fa,
-        ns_columns=NS_COLUMNS,
-        multicore=0,
-        plantations_polygons_id=0,
-        override=True,
-        how="lambda",
-) -> [str | None, np.ndarray, np.ndarray]:
+    plantation_id,
+    bee,
+    clc_values_roi,
+    clc_values_ca,
+    roi,
+    ca,
+    ratio_x,
+    ratio_y,
+    min_res,
+    image_url_fa,
+    ns_columns=NS_COLUMNS,
+    multicore=0,
+    plantations_polygons_id=0,
+    override=True,
+    how="lambda",
+):
     print(f"Performing lambda_bee for bee {bee['SPECIES']}")
     lambda_payload = {
         "plantation_id": plantation_id,
